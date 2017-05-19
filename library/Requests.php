@@ -186,8 +186,9 @@ class Requests {
 		$cap_string = serialize($capabilities);
 
 		// Don't search for a transport if it's already been done for these $capabilities
-		if (isset(self::$transport[$cap_string]) && self::$transport[$cap_string] !== null) {
-			return new self::$transport[$cap_string]();
+		$transport = self::$transport;
+		if (isset($transport[$cap_string]) && $transport[$cap_string] !== null) {
+			return new $transport[$cap_string]();
 		}
 		// @codeCoverageIgnoreEnd
 
@@ -206,15 +207,15 @@ class Requests {
 
 			$result = call_user_func(array($class, 'test'), $capabilities);
 			if ($result) {
-				self::$transport[$cap_string] = $class;
+				$transport[$cap_string] = $class;
 				break;
 			}
 		}
-		if (self::$transport[$cap_string] === null) {
+		if ($transport[$cap_string] === null) {
 			throw new Requests_Exception('No working transports found', 'notransport', self::$transports);
 		}
 
-		return new self::$transport[$cap_string]();
+		return new $transport[$cap_string]();
 	}
 
 	/**#@+
@@ -552,12 +553,15 @@ class Requests {
 	/**
 	 * Set the default values
 	 *
-	 * @param string $url URL to request
-	 * @param array $headers Extra headers to send with the request
-	 * @param array|null $data Data to send either as a query string for GET/HEAD requests, or in the body for POST requests
-	 * @param string $type HTTP request type
-	 * @param array $options Options for the request
+	 * @param string     $url     URL to request
+	 * @param array      $headers Extra headers to send with the request
+	 * @param array|null $data    Data to send either as a query string for GET/HEAD requests, or in the body for POST
+	 *                            requests
+	 * @param string     $type    HTTP request type
+	 * @param array      $options Options for the request
+	 *
 	 * @return array $options
+	 * @throws Requests_Exception
 	 */
 	protected static function set_defaults(&$url, &$headers, &$data, &$type, &$options) {
 		if (!preg_match('/^http(s)?:\/\//i', $url, $matches)) {
